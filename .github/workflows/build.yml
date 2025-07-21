@@ -1,0 +1,18 @@
+name: Kernel Build
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install dependencies
+      run: sudo apt-get update && sudo apt-get install -y nasm grub-pc-bin xorriso qemu-system-x86
+      
+    - name: Build kernel
+      run: make all
+      
+    - name: Test in QEMU
+      run: make run &
+      timeout-minutes: 1
