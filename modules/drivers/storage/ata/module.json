@@ -1,0 +1,12 @@
+{
+  "name": "ata_driver",
+  "type": "driver",
+  "version": "1.0.0",
+  "description": "ATA/ATAPI disk driver for universal kernel",
+  "requires": ["interrupts", "port_io"],
+  "capabilities": ["access_ports", "direct_memory_access"],
+  "entry": "ata_init()",
+  "exit": "ata_deinit()",
+  "author": "SvetOS Team",
+  "license": "MIT"
+}

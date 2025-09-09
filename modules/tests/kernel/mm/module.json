@@ -1,0 +1,7 @@
+{
+  "name": "mm_tests",
+  "type": "test",
+  "requires": ["memory_management"],
+  "entry": "init_mm_tests",
+  "exit": "cleanup_mm_tests"
+}

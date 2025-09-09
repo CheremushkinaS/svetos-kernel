@@ -1,43 +1,66 @@
+# Компиляторы и утилиты
 CC = gcc
+ASM = nasm
 LD = ld
-AS = nasm
 GRUB_MKRESCUE = grub-mkrescue
 
-CFLAGS = -m32 -nostdlib -ffreestanding -O2 -Wall -Wextra -Iinclude
-LDFLAGS = -m elf_i386 -T src/linker.ld -nostdlib -z noexecstack
-ASFLAGS = -f elf32
+# Флаги компиляции
+CFLAGS = -std=gnu99 -ffreestanding -Wall -Wextra -Iinclude -Iinclude/kernel -Iinclude/std -Ikernel/include -Ikernel/include/multiboot -Ikernel/include/hal -m32 -nostdinc -fno-builtin
+ASMFLAGS = -f elf32
+LDFLAGS = -T kernel/linker.ld -nostdlib -m elf_i386
 
-KERNEL = build/kernel.bin
-ISO = build/svetos.iso
-ISO_DIR = iso
+# Исходные файлы
+SRC_C = $(shell find kernel/src -name '*.c' ! -name '*backup*' ! -name 'minimal_kernel.c')
+SRC_ASM = $(shell find kernel/src -name '*.asm' ! -name 'gdt_asm.asm')
+OBJS = $(sort $(SRC_C:kernel/src/%.c=build/kernel/src/%.o) \
+             $(SRC_ASM:kernel/src/%.asm=build/kernel/src/%.o))
 
-# Добавляем все модули памяти
-OBJS = build/boot.o build/kernel.o build/printk.o build/mm/mm_dump.o
+# Цели по умолчанию
+all: build/kernel.bin
 
-all: $(ISO)
+# Сборка ядра
+build/kernel.bin: $(OBJS) kernel/linker.ld
+	$(LD) $(LDFLAGS) $(OBJS) -o $@
 
-$(ISO): $(KERNEL)
-	cp $(KERNEL) $(ISO_DIR)/boot/
-	$(GRUB_MKRESCUE) -o $(ISO) $(ISO_DIR)
+# Компиляция C файлов
+build/kernel/src/%.o: kernel/src/%.c
+	@mkdir -p $(@D)
+	$(CC) $(CFLAGS) -c $< -o $@
 
-$(KERNEL): $(OBJS)
-	$(LD) $(LDFLAGS) -o $@ $^
+# Ассемблирование ASM файлов
+build/kernel/src/%.o: kernel/src/%.asm
+	@mkdir -p $(@D)
+	$(ASM) $(ASMFLAGS) $< -o $@
 
-build/%.o: src/%.asm
-	$(AS) $(ASFLAGS) -o $@ $<
+# Создание ISO образа
+iso: build/kernel.bin initrd.img
+	@mkdir -p iso/boot/grub
+	cp build/kernel.bin iso/boot/
+	cp initrd.img iso/boot/
+	cp grub.cfg iso/boot/grub/
+	$(GRUB_MKRESCUE) -o svetos.iso iso
 
-build/%.o: src/%.c
-	mkdir -p $(@D)
-	$(CC) $(CFLAGS) -c -o $@ $<
+# Создание initrd образа
+initrd.img:
+	mkdir -p initrd_root
+	echo "Test module content" > initrd_root/test.kmod
+	echo "VFS core module" > initrd_root/vfs_core.kmod
+	cd initrd_root && find . | cpio -o -H newc > ../initrd.img
 
-# Правило для сборки модулей памяти
-build/mm/%.o: src/mm/%.c
-	mkdir -p $(@D)
-	$(CC) $(CFLAGS) -c -o $@ $<
-
+# Очистка
 clean:
-	rm -f $(OBJS) $(KERNEL) $(ISO)
-	rm -rf build/mm
+	rm -rf build iso svetos.iso initrd.img initrd_root
 
-run: $(ISO)
-	qemu-system-i386 -cdrom $(ISO) -display curses
+# Запуск в QEMU (текстовый режим) с автоматическим продолжением
+run: iso
+	qemu-system-i386 -cdrom svetos.iso -nographic -serial stdio -monitor none
+
+# Запуск в QEMU с выводом в терминал
+run-terminal: iso
+	qemu-system-i386 -cdrom svetos.iso -nographic -serial stdio -monitor none
+
+# Просмотр логов
+view-log:
+	cat serial.log
+
+.PHONY: all iso clean run run-terminal view-log initrd.img

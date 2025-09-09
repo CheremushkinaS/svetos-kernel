@@ -1,0 +1,6 @@
+{
+    "name": "init",
+    "type": "system",
+    "version": "1.0",
+    "description": "System initialization module"
+}

@@ -1,0 +1,8 @@
+{
+  "name": "terminal",
+  "type": "sys",
+  "requires": ["keyboard", "vga"],
+  "entry": "terminal_init",
+  "exit": "terminal_deinit",
+  "capabilities": ["access_i2c", "create_threads"]
+}

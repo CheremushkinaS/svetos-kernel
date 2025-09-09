@@ -1,0 +1,6 @@
+{
+    "name": "fat",
+    "type": "filesystem",
+    "version": "1.0",
+    "description": "FAT filesystem support"
+}

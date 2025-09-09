@@ -1,0 +1,6 @@
+{
+    "name": "ata",
+    "type": "driver",
+    "version": "1.0",
+    "description": "ATA disk driver"
+}

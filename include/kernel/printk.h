@@ -1,7 +1,12 @@
-#pragma once
+#ifndef PRINTK_H
+#define PRINTK_H
 
+#include <stdarg.h>
 #include <stddef.h>
-#include <stdint.h>  // Гарантируем наличие uintX_t
 
+void printk_init(void);
 void printk(const char* format, ...);
-void early_printk(const char* message);
+int vsnprintf(char* str, size_t size, const char* format, va_list args);
+int snprintf(char* str, size_t size, const char* format, ...);
+
+#endif

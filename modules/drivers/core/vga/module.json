@@ -1,0 +1,8 @@
+{
+    "name": "vga",
+    "type": "driver",
+    "requires": ["memory"],
+    "entry": "vga_init",
+    "exit": "vga_deinit",
+    "capabilities": ["access_pci"]
+}

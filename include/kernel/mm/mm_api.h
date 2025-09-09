@@ -1,24 +1,18 @@
-#pragma once
+#ifndef MM_API_H
+#define MM_API_H
 
-#include <kernel/mm/mm_types.h>
+#include "mm_types.h"
+#include <stdint.h>
 #include <stddef.h>
 
-// Публичный API
-void* mod_alloc(size_t size);
-void mod_free(void* ptr);
+// Публичное API для модулей
+void *mod_alloc(size_t size, uint32_t flags);
+void mod_free(void *ptr);
+uintptr_t mod_get_phys_addr(void *virt);
 
-ipc_buffer_t* create_shared_buffer(module_id_t src, module_id_t dst, size_t size);
-void destroy_shared_buffer(ipc_buffer_t* buf);
-
-mm_space_t* create_sandbox(module_id_t mod);
+// API для ядра
+mm_space_t *create_sandbox(module_id_t mod);
 void destroy_sandbox(module_id_t mod);
+ipc_buffer_t *create_shared_buffer(module_id_t src, module_id_t dst, size_t size);
 
-// Функции для ядра
-void* kalloc(size_t size);
-void kfree(void* ptr);
-
-// Инициализация памяти
-void mm_init(void);
-
-// Диагностика
-void mm_dump_map(void);
+#endif

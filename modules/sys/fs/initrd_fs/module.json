@@ -1,0 +1,6 @@
+{
+    "name": "initrd_fs",
+    "type": "filesystem",
+    "version": "1.0",
+    "description": "Initial RAM disk filesystem support"
+}

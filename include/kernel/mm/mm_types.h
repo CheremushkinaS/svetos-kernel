@@ -1,18 +1,25 @@
-#pragma once
+#ifndef MM_TYPES_H
+#define MM_TYPES_H
 
-#include <stdint.h>
 #include <stddef.h>
-
-typedef uint32_t module_id_t;
-typedef uint32_t sanbox_id_t;
+#include <stdint.h>
 
 typedef struct {
-    void* address;
+    size_t total_memory;
+    size_t free_memory;
+} mm_stats_t;
+
+typedef uint32_t module_id_t;
+
+typedef struct {
+    void* data;
     size_t size;
-    module_id_t owner;
 } ipc_buffer_t;
 
 typedef struct {
-    uint32_t start;
-    uint32_t end;
+    uintptr_t start;
+    size_t size;
+    module_id_t owner;
 } mm_space_t;
+
+#endif

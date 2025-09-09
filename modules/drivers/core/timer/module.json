@@ -1,0 +1,9 @@
+{
+    "name": "timer",
+    "type": "driver",
+    "version": "1.0",
+    "dependencies": ["interrupts"],
+    "capabilities": ["interrupt"],
+    "entry_point": "timer_init",
+    "exit_point": "timer_deinit"
+}

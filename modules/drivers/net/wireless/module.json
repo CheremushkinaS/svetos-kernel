@@ -1,0 +1,6 @@
+{
+    "name": "wireless",
+    "type": "driver",
+    "version": "1.0",
+    "description": "Wireless network driver"
+}

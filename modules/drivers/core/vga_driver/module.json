@@ -1,0 +1,6 @@
+{
+    "name": "vga_driver",
+    "type": "driver",
+    "version": "1.0",
+    "description": "VGA low-level driver"
+}

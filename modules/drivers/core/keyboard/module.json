@@ -1,0 +1,8 @@
+{
+    "name": "keyboard",
+    "type": "driver",
+    "requires": ["interrupts", "ipc"],
+    "entry": "keyboard_init",
+    "exit": "keyboard_deinit",
+    "capabilities": ["access_i2c"]
+}

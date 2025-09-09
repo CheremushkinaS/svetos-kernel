@@ -1,0 +1,6 @@
+{
+    "name": "usb",
+    "type": "driver",
+    "version": "1.0",
+    "description": "USB storage driver"
+}

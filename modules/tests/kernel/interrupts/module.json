@@ -1,0 +1,7 @@
+{
+  "name": "interrupt_tests",
+  "type": "test",
+  "requires": ["interrupts"],
+  "entry": "init_interrupt_tests",
+  "exit": "cleanup_interrupt_tests"
+}

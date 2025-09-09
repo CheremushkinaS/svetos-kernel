@@ -1,0 +1,6 @@
+{
+    "name": "ext2",
+    "type": "filesystem",
+    "version": "1.0",
+    "description": "EXT2 filesystem support"
+}
