@@ -4,6 +4,7 @@
 #include <stdarg.h>
 #include <kernel/printk.h>
 #include <kernel/string.h>
+#include <kernel/hal/serial.h>
 
 static const char* current_test = NULL;
 
@@ -37,7 +38,7 @@ void debug_assert(int condition, const char* file, int line, const char* format,
                 current_test ? current_test : "kernel", file, line, buffer);
 
         printk("%s\n", full_msg);
-        PANIC("Assertion failed");
+        panic("Assertion failed", file, line);
     }
 }
 
@@ -47,4 +48,11 @@ void panic(const char *message, const char *file, uint32_t line) {
     for (;;) {
         asm volatile("hlt");
     }
+}
+
+// Простая реализация kprintf через serial
+int kprintf(const char* format, ...) {
+    // Временная реализация - просто передаем строку в serial_puts
+    serial_puts(format);
+    return 0;
 }

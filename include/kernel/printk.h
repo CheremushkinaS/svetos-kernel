@@ -8,5 +8,6 @@ void printk_init(void);
 void printk(const char* format, ...);
 int vsnprintf(char* str, size_t size, const char* format, va_list args);
 int snprintf(char* str, size_t size, const char* format, ...);
+int kprintf(const char* format, ...);
 
 #endif

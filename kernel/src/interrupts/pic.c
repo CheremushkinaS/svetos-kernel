@@ -1,5 +1,6 @@
 #include <kernel/interrupts/pic.h>
 #include <kernel/hal/port_io.h>
+#include <kernel/printk.h>
 
 // Переинициализация PIC с новыми базовыми векторами
 void pic_remap(int offset1, int offset2) {
@@ -11,35 +12,41 @@ void pic_remap(int offset1, int offset2) {
     // Начинаем инициализацию
     outb(PIC1_COMMAND, ICW1_INIT | ICW1_ICW4);
     outb(PIC2_COMMAND, ICW1_INIT | ICW1_ICW4);
-    
+
     // Устанавливаем смещения
     outb(PIC1_DATA, offset1);
     outb(PIC2_DATA, offset2);
-    
+
     // Настраиваем каскадирование
     outb(PIC1_DATA, 4);
     outb(PIC2_DATA, 2);
-    
+
     // Устанавливаем режим
     outb(PIC1_DATA, ICW4_8086);
     outb(PIC2_DATA, ICW4_8086);
-    
+
     // Восстанавливаем маски
     outb(PIC1_DATA, a1);
     outb(PIC2_DATA, a2);
+
+    // Маскируем все прерывания
+    outb(PIC1_DATA, 0xFF);
+    outb(PIC2_DATA, 0xFF);
+
+    printk("PIC remapped and all interrupts masked\n");
 }
 
 void pic_set_mask(unsigned char irq_line) {
     uint16_t port;
     uint8_t value;
-    
+
     if (irq_line < 8) {
         port = PIC1_DATA;
     } else {
         port = PIC2_DATA;
         irq_line -= 8;
     }
-    
+
     value = inb(port) | (1 << irq_line);
     outb(port, value);
 }
@@ -47,14 +54,14 @@ void pic_set_mask(unsigned char irq_line) {
 void pic_clear_mask(unsigned char irq_line) {
     uint16_t port;
     uint8_t value;
-    
+
     if (irq_line < 8) {
         port = PIC1_DATA;
     } else {
         port = PIC2_DATA;
         irq_line -= 8;
     }
-    
+
     value = inb(port) & ~(1 << irq_line);
     outb(port, value);
 }

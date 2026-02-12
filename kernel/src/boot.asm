@@ -16,7 +16,7 @@ start:
     ; Устанавливаем стек
     mov esp, stack_top
 
-    ; Передаем параметры GRUB в kernel_main
+    ; Передаем параметры GRUB в kernel_main в правильном порядке
     push ebx  ; Multiboot info structure (физический адрес)
     push eax  ; Magic number
 

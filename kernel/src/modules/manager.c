@@ -1,78 +1,51 @@
 #include <kernel/modules/manager.h>
-#include <kernel/printk.h>
-#include <kernel/initrd/initrd.h>
-#include "string.h"
+#include <kernel/mm/mm.h>
+#include <kernel/debug.h>
+#include <string.h>
 
-static module_t modules[64];
-static int module_count = 0;
+static LIST_HEAD(loaded_modules);
 
-void module_manager_init(void) {
-    module_count = 0;
-    memset(modules, 0, sizeof(modules));
-    printk("Module manager initialized\n");
+void register_kernel_module(struct module* mod) {
+    if (!mod) return;
+
+    INIT_LIST_HEAD(&mod->list);
+    list_add_tail(&mod->list, &loaded_modules);
+
+    kprintf("Module registered: %s\n", mod->name);
 }
 
-int module_load(const char *name, void *data, size_t size) {
-    if (module_count >= 64) {
-        printk("Module limit reached\n");
-        return 0;
-    }
+int initialize_modules(void) {
+    struct list_head *pos;
+    int init_count = 0;
 
-    for (int i = 0; i < 64; i++) {
-        if (modules[i].loaded == 0) {
-            strncpy(modules[i].name, name, 31);
-            modules[i].name[31] = '\0';
-            modules[i].data = data;
-            modules[i].size = size;
-            modules[i].loaded = 1;
-            modules[i].profile_id = 0;
+    kprintf("Initializing kernel modules...\n");
 
-            module_count++;
-            printk("Module loaded: %s (%d bytes)\n", name, size);
-            return 1;
+    // Ручной обход списка
+    for (pos = loaded_modules.next; pos != &loaded_modules; pos = pos->next) {
+        struct module *mod = (struct module *)pos;
+        if (mod->init) {
+            kprintf("Initializing module: %s\n", mod->name);
+            if (mod->init() == 0) {
+                init_count++;
+            } else {
+                kprintf("Failed to initialize module: %s\n", mod->name);
+            }
         }
     }
 
-    printk("Failed to load module: %s\n", name);
-    return 0;
+    kprintf("Total modules initialized: %d\n", init_count);
+    return init_count;
 }
 
-int module_load_critical(void) {
-    printk("Loading critical modules...\n");
+struct module* find_module(const char* name) {
+    struct list_head *pos;
 
-    int loaded_count = 0;
-
-    // Загружаем только самые базовые модули
-    loaded_count += module_load("vfs_core", NULL, 0);
-    loaded_count += module_load("module_loader", NULL, 0);
-
-    printk("Critical modules loaded: %d\n", loaded_count);
-    return loaded_count;
-}
-
-int module_load_from_fs(const char* path) {
-    printk("Loading modules from filesystem: %s\n", path);
-    printk("Filesystem module loading not implemented yet\n");
-    return 0;
-}
-
-module_t *module_get(const char *name) {
-    for (int i = 0; i < 64; i++) {
-        if (modules[i].loaded && strcmp(modules[i].name, name) == 0) {
-            return &modules[i];
+    // Ручной обход списка
+    for (pos = loaded_modules.next; pos != &loaded_modules; pos = pos->next) {
+        struct module *mod = (struct module *)pos;
+        if (strcmp(mod->name, name) == 0) {
+            return mod;
         }
     }
-    return 0;
-}
-
-int module_unload(const char *name) {
-    for (int i = 0; i < 64; i++) {
-        if (modules[i].loaded && strcmp(modules[i].name, name) == 0) {
-            modules[i].loaded = 0;
-            module_count--;
-            printk("Module unloaded: %s\n", name);
-            return 1;
-        }
-    }
-    return 0;
+    return NULL;
 }

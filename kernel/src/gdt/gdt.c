@@ -34,11 +34,9 @@ void init_gdt(void) {
     // Сегмент данных
     gdt_set_gate(2, 0, 0xFFFFFFFF, 0x92, 0xCF);
 
-    // Загрузка GDT
-    __asm__ volatile("lgdt (%0)" : : "r" (&gdt_ptr));
-
-    // Перезагрузка сегментных регистров через ассемблерную функцию
+    // Загрузка GDT через ассемблерную функцию
     gdt_flush((uint32_t)&gdt_ptr);
+    printk("GDT loaded at 0x%x, limit: 0x%x\n", gdt_ptr.base, gdt_ptr.limit);
 }
 
 // Алиас для совместимости с kernel.c

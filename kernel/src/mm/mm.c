@@ -32,7 +32,7 @@ static mem_block_t* first_block = NULL;
 static void init_heap(multiboot_info_t* mb_info) {
     // Use multiboot info to determine available memory
     uint32_t available_memory = 0;
-    
+
     if (mb_info->flags & MULTIBOOT_INFO_MEMORY) {
         available_memory = (mb_info->mem_lower + mb_info->mem_upper) * 1024;
         printk("Available memory: %u KB\n", mb_info->mem_lower + mb_info->mem_upper);
@@ -41,19 +41,19 @@ static void init_heap(multiboot_info_t* mb_info) {
         available_memory = 64 * 1024 * 1024; // Assume 64MB
         printk("No memory info available, assuming %u MB\n", available_memory / (1024 * 1024));
     }
-    
+
     // Set heap start after kernel
     heap_start = (uint8_t*)(((uintptr_t)&_kernel_end + 4095) & ~4095);
-    
+
     // Calculate heap size based on available memory
     uint32_t max_heap_size = available_memory - (uint32_t)heap_start;
     uint32_t actual_heap_size = HEAP_SIZE;
-    
+
     if (actual_heap_size > max_heap_size) {
         actual_heap_size = max_heap_size;
         printk("Reducing heap size to %u KB due to memory constraints\n", actual_heap_size / 1024);
     }
-    
+
     heap_end = heap_start + actual_heap_size;
 
     first_block = (mem_block_t*)heap_start;
@@ -170,6 +170,13 @@ void mm_dump_blocks(void) {
 }
 
 int memory_module_init(void) {
-    // This function is not used anymore as we initialize memory in kernel_main
-    return 0;
+    // Эта функция является точкой входа для модуля памяти
+    // Раньше она использовалась для инициализации менеджера памяти,
+    // но сейчас инициализация происходит напрямую в kernel_main через mm_init()
+
+    // В текущей архитектуре эта функция не должна вызываться
+    printk("WARNING: memory_module_init() is deprecated and should not be called\n");
+    printk("Memory initialization is now handled by mm_init() in kernel_main\n");
+
+    return 0; // Всегда возвращает 0 для совместимости
 }

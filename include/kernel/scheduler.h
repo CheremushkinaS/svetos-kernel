@@ -20,4 +20,7 @@ static inline void spinlock_unlock(spinlock_t* lock) {
     *lock = 0;
 }
 
+// Заглушка для получения текущего PID
+uint32_t get_current_pid(void);
+
 #endif // SCHEDULER_H

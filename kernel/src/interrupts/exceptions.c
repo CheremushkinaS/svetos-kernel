@@ -1,20 +1,17 @@
 #include <kernel/interrupts/exceptions.h>
 #include <kernel/printk.h>
-#include <kernel/panic.h>
 
 void exception_handler(interrupt_frame_t* frame) {
-    printk("Exception %d occurred\n", frame->int_no);
-    printk("Error code: 0x%x\n", frame->err_code);
-    printk("EIP: 0x%x, CS: 0x%x\n", frame->eip, frame->cs);
+    printk("Basic exception handler: Exception %d\n", frame->int_no);
     
-    // Для критических исключений вызываем панику
-    if (frame->int_no < 20) {
-        kernel_panic("Unhandled exception");
+    // Бесконечный цикл - не пытаемся продолжить выполнение
+    while(1) {
+        asm volatile("hlt");
     }
 }
 
 void exceptions_init(void) {
-    printk("Exceptions initialized\n");
+    printk("Basic exceptions system initialized\n");
 }
 
 int exceptions_module_init(void) {

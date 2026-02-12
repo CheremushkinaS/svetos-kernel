@@ -1,5 +1,11 @@
 #!/bin/bash
 
+echo "Creating SVETOS ISO image..."
+
+# Clean previous build
+rm -rf iso
+rm -f svetos.iso
+
 # Create directory structure for ISO
 mkdir -p iso/boot/grub
 
@@ -10,7 +16,13 @@ cp initrd.img iso/boot/
 # Copy GRUB configuration
 cp grub.cfg iso/boot/grub/
 
-# Create ISO image
+echo "Creating ISO with GRUB..."
 grub-mkrescue -o svetos.iso iso
 
-echo "ISO image created: svetos.iso"
+if [ $? -eq 0 ]; then
+    echo "ISO image created successfully: svetos.iso"
+    ls -la svetos.iso
+else
+    echo "Failed to create ISO image"
+    exit 1
+fi

@@ -1,76 +1,51 @@
+#include <stdint.h>
 #include <kernel/interrupts/idt.h>
-#include <kernel/interrupts/interrupt_frame.h>
 #include <kernel/printk.h>
-#include "string.h"
 
-#define IDT_ENTRIES 256
+// Таблица IDT
+static idt_entry_t idt_entries[256];
+static idt_ptr_t idt_ptr;
 
-struct idt_entry {
-    uint16_t base_low;
-    uint16_t selector;
-    uint8_t zero;
-    uint8_t flags;
-    uint16_t base_high;
-} __attribute__((packed));
-
-struct idt_ptr {
-    uint16_t limit;
-    uint32_t base;
-} __attribute__((packed));
-
-struct idt_entry idt[IDT_ENTRIES];
-struct idt_ptr idtp;
-
-extern void idt_load();
-
-// Массив для хранения обработчиков прерываний
-static isr_t interrupt_handlers[256] = {0};
-
-// Установка шлюза в IDT
-void set_idt_gate(uint8_t num, isr_t handler, uint16_t selector, uint8_t flags) {
-    uint32_t base = (uint32_t)handler;
-
-    idt[num].base_low = base & 0xFFFF;
-    idt[num].base_high = (base >> 16) & 0xFFFF;
-    idt[num].selector = selector;
-    idt[num].zero = 0;
-    idt[num].flags = flags | 0x60; // Всегда устанавливаем биты DPL=0
+void idt_set_gate(uint8_t num, uint32_t base, uint16_t sel, uint8_t flags) {
+    idt_entries[num].base_low = base & 0xFFFF;
+    idt_entries[num].base_high = (base >> 16) & 0xFFFF;
+    idt_entries[num].sel = sel;
+    idt_entries[num].always0 = 0;
+    idt_entries[num].flags = flags;
 }
 
-// Регистрация обработчика прерывания
-void register_interrupt_handler(uint8_t int_num, isr_t handler) {
-    // Сохраняем обработчик в массив
-    interrupt_handlers[int_num] = handler;
-    // Установка шлюза с флагами:
-    // P=1 (присутствует), DPL=0 (уровень привилегий ядра), Type=0xE (32-битный шлюз прерывания)
-    set_idt_gate(int_num, handler, 0x08, 0x8E);
-}
-
-// Инициализация IDT
 void idt_init(void) {
-    // Настройка указателя IDT
-    idtp.limit = sizeof(struct idt_entry) * IDT_ENTRIES - 1;
-    idtp.base = (uint32_t)&idt;
+    asm volatile("cli");
 
-    // Очистка IDT
-    memset(&idt, 0, sizeof(struct idt_entry) * IDT_ENTRIES);
+    printk("Initializing IDT...\n");
 
-    // Загрузка IDT
-    asm volatile("lidt %0" : : "m"(idtp));
+    // Настраиваем указатель на IDT
+    idt_ptr.limit = sizeof(idt_entry_t) * 256 - 1;
+    idt_ptr.base = (uint32_t)&idt_entries;
 
-    printk("IDT initialized\n");
-}
+    printk("IDT pointer: base=0x%x, limit=0x%x\n", idt_ptr.base, idt_ptr.limit);
 
-// Обработчик прерываний по умолчанию
-void isr_handler(interrupt_frame_t* frame) {
-    if (interrupt_handlers[frame->int_no]) {
-        interrupt_handlers[frame->int_no](frame);
-    } else {
-        printk("Unhandled interrupt: %d\n", frame->int_no);
+    // Очищаем IDT
+    for (int i = 0; i < 256; i++) {
+        idt_entries[i].base_low = 0;
+        idt_entries[i].base_high = 0;
+        idt_entries[i].sel = 0;
+        idt_entries[i].always0 = 0;
+        idt_entries[i].flags = 0;
     }
-}
 
-int idt_module_init(void) {
-    idt_init();
-    return 0;
+    // Устанавливаем обработчики для критических исключений
+    idt_set_gate(0, (uint32_t)isr0, 0x08, 0x8E);
+    idt_set_gate(6, (uint32_t)isr6, 0x08, 0x8E);
+    idt_set_gate(8, (uint32_t)isr8, 0x08, 0x8E);
+    idt_set_gate(13, (uint32_t)isr13, 0x08, 0x8E);
+    idt_set_gate(14, (uint32_t)isr14, 0x08, 0x8E);
+
+    // Загружаем IDT
+    load_idt(&idt_ptr);
+    
+    // Включаем прерывания
+    asm volatile("sti");
+
+    printk("IDT initialization complete\n");
 }

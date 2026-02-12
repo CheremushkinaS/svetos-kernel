@@ -1,40 +1,36 @@
 #ifndef MODULE_H
 #define MODULE_H
 
-#include <stdint.h>
 #include <kernel/types.h>
 
-// Типы функций модуля
-typedef int (*module_init_func)(void);
-typedef int (*module_deinit_func)(void);
-typedef int (*module_test_func)(void);
+#define MODULE_MAGIC 0x4D4F4455  // "MODU"
 
-// Состояния модуля
-#define MODULE_STATE_UNLOADED 0
-#define MODULE_STATE_LOADED   1
-#define MODULE_STATE_ACTIVE   2
-#define MODULE_STATE_ERROR    3
-
-// Базовая структура модуля
-typedef struct {
+struct module {
+    uint32_t magic;
     char name[32];
     uint32_t version;
-    module_init_func init;
-    module_deinit_func deinit;
-    module_test_func run_tests;
-    uint32_t state;
-    uint32_t flags;
-} module_t;
+    module_type_t type;
+    
+    void (*register_interfaces)(void);
+    void (*unregister_interfaces)(void);
+    void (*init)(void);
+    void (*exit)(void);
+};
 
-// Функции для работы с модулями
-int module_load(const char* name, module_init_func init, module_deinit_func deinit, module_test_func run_tests);
-int module_unload(const char* name);
-module_t* module_find(const char* name);
-void module_init(void);
-void module_init_system(void);
-void module_print_loaded(void);
-void module_run_tests(void);
-void module_list(void);
+// Функции менеджера модулей
+void register_kernel_module(struct module* mod);
+void initialize_modules(void);
+struct module* find_module(const char* name);
+
+// Совместимость со старым API
+typedef struct module module_t;
+#define MODULE_UNINITIALIZED 0
+#define MODULE_READY 1
+
+void module_manager_init(void);
+int module_load_critical(void);
+int register_module(const char* name, void* init_func, void* cleanup_func);
+int initialize_module(const char* name);
+module_t* find_module(const char* name);
 
 #endif
-void module_register_external(const char* name, const char* desc, int type, int subtype, int version, int flags, void* init, void* deinit, void* tests);

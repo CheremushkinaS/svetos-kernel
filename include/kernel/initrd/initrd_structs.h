@@ -3,17 +3,18 @@
 
 #include <kernel/types.h>
 
-// Структура для представления файла в initrd
-typedef struct initrd_file {
-    char name[256];      // Имя файла
-    void* data;          // Указатель на данные файла
-    uint32_t size;       // Размер файла
-    uint32_t index;      // Индекс файла
-} initrd_file_t;
+// Структура заголовка initrd
+typedef struct {
+    uint32_t num_files;
+    uint32_t file_headers[0];
+} initrd_header_t;
 
-// Функции для работы с initrd
-initrd_file_t* initrd_get_files(void);
-uint32_t initrd_get_file_count(void);
-initrd_file_t* initrd_find_file(const char* name);
+// Структура файла в initrd
+typedef struct {
+    char name[64];
+    uint32_t offset;
+    uint32_t size;
+    uint8_t data[0];
+} initrd_file_t;
 
 #endif // INITRD_STRUCTS_H
